@@ -62,7 +62,7 @@ fn clear_last_error() {
 ///     printf("에러: %s\n", err);
 /// }
 /// ```
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn hancat_last_error() -> *const c_char {
     LAST_ERROR.with(|e| e.borrow().as_ptr())
 }
@@ -101,7 +101,7 @@ pub extern "C" fn hancat_last_error() -> *const c_char {
 /// // r3: "여기서 쉬세요."
 /// hancat_free(r3);
 /// ```
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn hancat_modify(input: *const c_char) -> *mut c_char {
     clear_last_error();
 
@@ -143,7 +143,7 @@ pub extern "C" fn hancat_modify(input: *const c_char) -> *mut c_char {
 /// printf("%s\n", result);
 /// hancat_free(result);  // 반드시 해제
 /// ```
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn hancat_free(s: *mut c_char) {
     if !s.is_null() {
         unsafe {
