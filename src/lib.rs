@@ -19,6 +19,9 @@
 //! }
 //! ```
 
+#[cfg(not(feature = "source-github"))]
+compile_error!("feature \"source-github\"가 필요합니다. --no-default-features를 사용하지 마세요.");
+
 #[cfg(feature = "source-github")]
 use hancat_git as hancat;
 
