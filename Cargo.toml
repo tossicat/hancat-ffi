@@ -1,0 +1,24 @@
+[package]
+name = "hancat-ffi"
+version = "0.1.0"
+edition = "2021"
+description = "C FFI bindings for hancat-core - Korean text processing (postposition + verb conjugation)"
+license = "MIT"
+repository = "https://github.com/tossicat/hancat-ffi"
+keywords = ["korean", "nlp", "ffi", "c", "conjugation"]
+categories = ["localization", "text-processing"]
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[features]
+default = ["source-github"]
+source-github = ["dep:hancat-git"]
+grade-a = ["hancat-git?/grade-a"]
+grade-b = ["hancat-git?/grade-b"]
+
+[dependencies]
+hancat-git = { package = "hancat-core", git = "https://github.com/tossicat/hancat-core", branch = "main", optional = true }
+
+[build-dependencies]
+cbindgen = "0.27"
