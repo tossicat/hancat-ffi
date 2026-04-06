@@ -64,14 +64,7 @@ gcc -o example example.c -L target/release -lhancat_ffi
 ## 이 프로젝트의 장점
 
 - **토시(조사) + 용언 활용 통합**: 하나의 함수(`hancat_modify`)로 조사 변환과 용언 활용을 동시에 처리합니다.
-- **의존성 소스 선택 가능**: Cargo features를 통해 crates.io 안정 버전과 GitHub dev 브랜치 중 선택할 수 있습니다.
-  ```bash
-  # crates.io 안정 버전 (기본값)
-  cargo build --release
-
-  # GitHub dev 브랜치 (최신 개발 버전)
-  cargo build --release --no-default-features --features source-github
-  ```
+- **GitHub 최신 소스 사용**: 기본적으로 [hancat-core](https://github.com/tossicat/hancat-core) GitHub 저장소의 최신 코드를 사용합니다.
 - **용언 등급 선택 가능**: 용언 사전 크기를 선택할 수 있습니다.
   ```bash
   # grade-a: 최소 230개 용언
@@ -143,8 +136,7 @@ void show_item_message(const char* item_name) {
 
 ## 의존성
 
-- 기본: [hancat-core](https://crates.io/crates/hancat-core) 0.1 (crates.io)
-- 선택: [hancat-core](https://github.com/tossicat/hancat-core) dev 브랜치 (`--features source-github`)
+- [hancat-core](https://github.com/tossicat/hancat-core) (GitHub, `source-github` feature 기본 활성화)
 
 ## 활용 방법
 

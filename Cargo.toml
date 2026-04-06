@@ -12,13 +12,11 @@ categories = ["localization", "text-processing"]
 crate-type = ["cdylib", "staticlib"]
 
 [features]
-default = ["source-github"]
-source-github = ["dep:hancat-git"]
-grade-a = ["hancat-git?/grade-a"]
-grade-b = ["hancat-git?/grade-b"]
+grade-a = ["hancat-core/grade-a"]
+grade-b = ["hancat-core/grade-b"]
 
 [dependencies]
-hancat-git = { package = "hancat-core", git = "https://github.com/tossicat/hancat-core", branch = "main", optional = true }
+hancat-core = "0.8"
 
 [build-dependencies]
 cbindgen = "0.29"

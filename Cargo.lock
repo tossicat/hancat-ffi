@@ -165,8 +165,9 @@ dependencies = [
 
 [[package]]
 name = "hancat-core"
-version = "0.1.0"
-source = "git+https://github.com/tossicat/hancat-core?branch=main#426727fcebf9ea218445c598213d0540b052cff7"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fba1b66ed7e12718d4c292efe44719ff2423a9580e56815e72fe577db37c3cb5"
 dependencies = [
  "tossicat",
  "yongcat",
@@ -640,8 +641,9 @@ dependencies = [
 
 [[package]]
 name = "yongcat"
-version = "0.7.0"
-source = "git+https://github.com/tossicat/yongcat#bc1a2f62415f05d61d3ba4dae6e4433acd7a8456"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e52eede88381c56e23d6b09c41c2b9b883bbb4a8f47395f59546c6bfd891b26"
 
 [[package]]
 name = "zmij"
