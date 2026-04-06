@@ -1,8 +1,22 @@
 # HanCat FFI
 
-[hancat-core](https://github.com/tossicat/hancat-core)의 C FFI 바인딩입니다.
+[hancat-core](https://crates.io/crates/hancat-core)의 C FFI 바인딩입니다.
 게임 엔진(Unreal, Unity, Godot 등)이나 C/C++ 프로젝트에서
 한국어 조사(토시) 변환과 용언 활용 기능을 사용할 수 있게 해줍니다.
+
+[tossicat-core](https://github.com/tossicat/tossicat-core)(토시(조사))와 [yongcat](https://github.com/tossicat/yongcat)(용언 활용)을 통합하는 한국어 텍스트 처리 라이브러리입니다.
+
+`{단어, 접사}` 형태의 템플릿으로 토시(조사)와 용언 활용을 자동으로 처리합니다. 이 라이브러리는 단순하게 하나의 함수만을 제공합니다. 아래 사용 예에서도 확인할 수 있지만, 함수 하나를 가지고 많은 일을 하고 있습니다. 포함된 자료를 가지고, 우선 사용하는 토시, 용언, 그리고 어미가 이 자료에 포함된 경우, 사용자가 제시한 단어에 따라 토시를 적절하게 변형하고, 사용자가 선택한 용언과 어미를 적절하게 변형해 줍니다.
+
+사용자가 제시한 토시, 용언, 어미가 자료에 없는 경우에는 없다는 신호를 합니다. 토시와 결합하는 단어는 자료에 포함되지 않기 때문에 사용자가 제시한 단어 모두를 처리할 수 있습니다. 물론 한글을 제외한 다른 외국어는 처리할 수 없습니다. 그 언어의 정확한 한국어 발음을 현재 이 라이브러리에서는 처리할 수 없기 때문입니다. 처리할 수 있는 숫자와 종류는 아래 표를 확인하시면 됩니다.
+
+| 항목 | 지원 수 | 제공 |
+|------|---------|------|
+| 토시(조사) | 약 200개 | [tossicat-core](https://github.com/tossicat/tossicat-core) |
+| 용언 | 약 1,700개 | [yongcat](https://github.com/tossicat/yongcat) |
+| 어미 | 약 40개 | [yongcat](https://github.com/tossicat/yongcat) |
+
+> 용언은 사용자가 CSV로 추가할 수 있고, 용언 수는 feature flag로 조절할 수 있습니다. 정확한 지원 수는 각 프로젝트의 문서를 참고하세요.
 
 ## 빌드
 
@@ -61,11 +75,12 @@ gcc -o example example.c -L target/release -lhancat_ffi
 gcc -o example example.c -L target/release -lhancat_ffi
 ```
 
-## 이 프로젝트의 장점
+## 장점
 
-- **토시(조사) + 용언 활용 통합**: 하나의 함수(`hancat_modify`)로 조사 변환과 용언 활용을 동시에 처리합니다.
-- **GitHub 최신 소스 사용**: 기본적으로 [hancat-core](https://github.com/tossicat/hancat-core) GitHub 저장소의 최신 코드를 사용합니다.
-- **용언 등급 선택 가능**: 용언 사전 크기를 선택할 수 있습니다.
+- **단순한 API** — 함수 하나(`hancat_modify`)만 알면 됩니다. 토시/용언/어미 구분을 사용자가 할 필요 없이 라이브러리가 자동 판별합니다.
+- **통합 처리** — tossicat-core와 yongcat을 따로 사용하면 각각의 API를 학습하고 분기 로직을 직접 작성해야 합니다. hancat-core는 이를 `{단어, 접사}` 템플릿 하나로 통합합니다.
+- **안전한 에러 처리** — 에러가 발생해도 프로그램이 중단되지 않습니다. 에러 코드(`{E01}`~`{E12}`)를 해당 위치에 삽입하고 나머지 문장은 정상 처리합니다.
+- **용언 등급 선택 가능** — feature flag로 용언 등급별 포함 범위를 조절하여 바이너리 크기를 최적화할 수 있습니다.
   ```bash
   # grade-a: 최소 230개 용언
   cargo build --release --features grade-a
@@ -73,7 +88,8 @@ gcc -o example example.c -L target/release -lhancat_ffi
   # grade-b: 863개 용언
   cargo build --release --features grade-b
   ```
-- **게임에서의 활용**: 한국어 게임에서 아이템명이나 캐릭터명에 따라 조사를 자동으로 붙이고, 용언 활용까지 처리할 수 있습니다.
+- **비개발자도 이해 가능한 템플릿** — `"{플레이어, 이} {몬스터, 을} {공격하다, 었습니다}."` 형태는 기획자나 번역가도 읽고 수정할 수 있습니다. 게임 로그, NPC 대사, 시스템 메시지 등을 코드 수정 없이 외부 데이터로 관리할 수 있습니다.
+- **게임에서의 활용** — 한국어 게임에서 아이템명이나 캐릭터명에 따라 조사를 자동으로 붙이고, 용언 활용까지 처리할 수 있습니다.
 
 ```c
 // 게임 아이템 획득 메시지
@@ -136,7 +152,9 @@ void show_item_message(const char* item_name) {
 
 ## 의존성
 
-- [hancat-core](https://github.com/tossicat/hancat-core) (GitHub, `source-github` feature 기본 활성화)
+- [hancat-core](https://crates.io/crates/hancat-core) 0.8 — 한국어 텍스트 처리 (토시 + 용언 활용)
+  - [tossicat-core](https://github.com/tossicat/tossicat-core) — 한국어 토시(조사) 처리
+  - [yongcat](https://github.com/tossicat/yongcat) — 한국어 용언 활용
 
 ## 활용 방법
 
