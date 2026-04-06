@@ -60,9 +60,70 @@ jobs:
           name: hancat-ffi-${{ matrix.target }}
           path: hancat-ffi-${{ github.ref_name }}-*
 
+  build-ios:
+    name: Build iOS (XCFramework)
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+
+      - name: Build XCFramework
+        run: ./scripts/build-ios.sh
+
+      - name: Package
+        run: |
+          cd dist/ios
+          tar czf "$GITHUB_WORKSPACE/hancat-ffi-${{ github.ref_name }}-ios-xcframework.tar.gz" HanCatFFI.xcframework
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hancat-ffi-ios
+          path: hancat-ffi-${{ github.ref_name }}-ios-xcframework.tar.gz
+
+  build-android:
+    name: Build Android (jniLibs)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android,i686-linux-android
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r27c
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
+      - name: Build jniLibs
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: ./scripts/build-android.sh
+
+      - name: Package
+        run: |
+          cd dist/android
+          tar czf "$GITHUB_WORKSPACE/hancat-ffi-${{ github.ref_name }}-android-jnilibs.tar.gz" jniLibs hancat.h
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hancat-ffi-android
+          path: hancat-ffi-${{ github.ref_name }}-android-jnilibs.tar.gz
+
   release:
     name: Create Release
-    needs: build
+    needs: [build, build-ios, build-android]
     runs-on: ubuntu-latest
     permissions:
       contents: write

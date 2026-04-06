@@ -1,7 +1,7 @@
 # HanCat FFI
 
 [hancat-core](https://crates.io/crates/hancat-core)의 C FFI 바인딩입니다.
-게임 엔진(Unreal, Unity, Godot 등)이나 C/C++ 프로젝트에서
+게임 엔진(Unreal, Unity, Godot 등), 모바일 앱(iOS, Android), C/C++ 프로젝트에서
 한국어 조사(토시) 변환과 용언 활용 기능을 사용할 수 있게 해줍니다.
 
 [tossicat-core](https://github.com/tossicat/tossicat-core)(토시(조사))와 [yongcat](https://github.com/tossicat/yongcat)(용언 활용)을 통합하는 한국어 텍스트 처리 라이브러리입니다.
@@ -20,6 +20,8 @@
 
 ## 빌드
 
+### 데스크톱 (Linux / macOS / Windows)
+
 ```bash
 cargo build --release
 ```
@@ -30,6 +32,35 @@ cargo build --release
 - `target/release/libhancat_ffi.so` (Linux)
 - `target/release/libhancat_ffi.dylib` (macOS)
 - `target/release/hancat_ffi.dll` (Windows)
+
+### iOS
+
+XCFramework (디바이스 + 시뮬레이터)를 생성합니다.
+
+```bash
+# 사전 준비
+rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+
+# 빌드
+./scripts/build-ios.sh
+```
+
+결과: `dist/ios/HanCatFFI.xcframework`
+
+### Android
+
+각 ABI별 `.so` 파일을 jniLibs 구조로 생성합니다.
+
+```bash
+# 사전 준비
+cargo install cargo-ndk
+rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
+
+# 빌드 (ANDROID_NDK_HOME 환경변수 필요)
+./scripts/build-android.sh
+```
+
+결과: `dist/android/jniLibs/{arm64-v8a,armeabi-v7a,x86_64,x86}/libhancat_ffi.so`
 
 ## C 언어에서 사용법
 
@@ -63,13 +94,7 @@ int main() {
 }
 ```
 
-### 컴파일 (Linux)
-
-```bash
-gcc -o example example.c -L target/release -lhancat_ffi
-```
-
-### 컴파일 (macOS)
+### 컴파일 (Linux / macOS)
 
 ```bash
 gcc -o example example.c -L target/release -lhancat_ffi
@@ -90,25 +115,24 @@ gcc -o example example.c -L target/release -lhancat_ffi
   ```
 - **비개발자도 이해 가능한 템플릿** — `"{플레이어, 이} {몬스터, 을} {공격하다, 었습니다}."` 형태는 기획자나 번역가도 읽고 수정할 수 있습니다. 게임 로그, NPC 대사, 시스템 메시지 등을 코드 수정 없이 외부 데이터로 관리할 수 있습니다.
 - **게임에서의 활용** — 한국어 게임에서 아이템명이나 캐릭터명에 따라 조사를 자동으로 붙이고, 용언 활용까지 처리할 수 있습니다.
+  ```c
+  // 게임 아이템 획득 메시지
+  void show_item_message(const char* item_name) {
+      char template[256];
+      snprintf(template, sizeof(template), "{%s, 을} 획득했습니다!", item_name);
 
-```c
-// 게임 아이템 획득 메시지
-void show_item_message(const char* item_name) {
-    char template[256];
-    snprintf(template, sizeof(template), "{%s, 을} 획득했습니다!", item_name);
+      char* message = hancat_modify(template);
+      if (message) {
+          show_ui_text(message);  // 게임 UI에 표시
+          hancat_free(message);
+      }
+  }
 
-    char* message = hancat_modify(template);
-    if (message) {
-        show_ui_text(message);  // 게임 UI에 표시
-        hancat_free(message);
-    }
-}
-
-// show_item_message("포션");   → "포션을 획득했습니다!"
-// show_item_message("검");     → "검을 획득했습니다!"
-// show_item_message("활");     → "활을 획득했습니다!"
-// show_item_message("마나");   → "마나를 획득했습니다!"
-```
+  // show_item_message("포션");   → "포션을 획득했습니다!"
+  // show_item_message("검");     → "검을 획득했습니다!"
+  // show_item_message("활");     → "활을 획득했습니다!"
+  // show_item_message("마나");   → "마나를 획득했습니다!"
+  ```
 
 ## API 목록
 
@@ -144,9 +168,9 @@ void show_item_message(const char* item_name) {
 
 `main` 브랜치에 push하거나 PR을 올리면 GitHub Actions를 통해 자동으로 테스트와 빌드가 실행됩니다.
 
-- **Linux**, **macOS**, **Windows** 3개 플랫폼에서 병렬 실행
-- `cargo test` — 단위 테스트 자동 실행
-- `cargo build --release` — 릴리스 빌드 및 산출물 artifact 업로드
+- **Linux**, **macOS**, **Windows** — 데스크톱 테스트 및 빌드
+- **iOS** — XCFramework 빌드 (디바이스 + 시뮬레이터)
+- **Android** — jniLibs 빌드 (arm64-v8a, armeabi-v7a, x86_64, x86)
 
 결과는 [Actions 탭](https://github.com/tossicat/hancat-ffi/actions)에서 확인할 수 있습니다.
 
@@ -158,7 +182,7 @@ void show_item_message(const char* item_name) {
 
 ## 활용 방법
 
-빌드된 라이브러리(`libhancat_ffi.so`/`.dylib`/`.dll`)와 헤더 파일(`include/hancat.h`)을 프로젝트에 복사하여 사용합니다.
+빌드된 라이브러리와 헤더 파일(`include/hancat.h`)을 프로젝트에 복사하여 사용합니다.
 
 ### C/C++
 
@@ -233,6 +257,48 @@ GDExtension C API를 통해 바인딩하거나, GDNative를 사용합니다.
 var result = HanCat.modify("{포션, 을} 획득했습니다!")
 print(result)  # "포션을 획득했습니다!"
 ```
+
+### iOS (Swift)
+
+XCFramework를 Xcode 프로젝트에 추가한 뒤 bridging header에서 `#include "hancat.h"`를 선언합니다.
+
+```swift
+import Foundation
+
+func hancatModify(_ input: String) -> String? {
+    guard let result = hancat_modify(input) else { return nil }
+    defer { hancat_free(result) }
+    return String(cString: result)
+}
+
+// 사용 예시
+let message = hancatModify("{포션, 을} 획득했습니다!")
+// "포션을 획득했습니다!"
+```
+
+### Android (Kotlin)
+
+`jniLibs`에 `.so` 파일을 배치하고 JNI로 호출합니다.
+
+```kotlin
+object HanCat {
+    init {
+        System.loadLibrary("hancat_ffi")
+    }
+
+    private external fun nativeModify(input: String): String?
+    private external fun nativeLastError(): String
+
+    fun modify(input: String): String? = nativeModify(input)
+    fun lastError(): String = nativeLastError()
+}
+
+// 사용 예시
+val message = HanCat.modify("{포션, 을} 획득했습니다!")
+// "포션을 획득했습니다!"
+```
+
+> **참고:** JNI 바인딩 코드(`native-lib.c` 등)는 직접 작성해야 합니다. `hancat.h`의 함수를 JNI에서 호출하는 C 래퍼를 만들어 사용하세요.
 
 ## 라이선스
 

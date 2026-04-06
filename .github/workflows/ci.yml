@@ -64,3 +64,74 @@ jobs:
             target/release/hancat_ffi.dll
             target/release/hancat_ffi.dll.lib
             include/hancat.h
+
+  build-ios:
+    name: Build iOS (XCFramework)
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+
+      - name: Cache cargo registry & build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ios-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build XCFramework
+        run: ./scripts/build-ios.sh
+
+      - name: Upload XCFramework
+        uses: actions/upload-artifact@v4
+        with:
+          name: hancat-ffi-ios-xcframework
+          path: dist/ios/HanCatFFI.xcframework
+
+  build-android:
+    name: Build Android (jniLibs)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android,i686-linux-android
+
+      - name: Cache cargo registry & build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: android-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r27c
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
+      - name: Build jniLibs
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: ./scripts/build-android.sh
+
+      - name: Upload jniLibs
+        uses: actions/upload-artifact@v4
+        with:
+          name: hancat-ffi-android-jnilibs
+          path: |
+            dist/android/jniLibs
+            dist/android/hancat.h
